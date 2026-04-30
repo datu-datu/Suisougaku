@@ -58,6 +58,9 @@ export const AttendanceView = () => {
   const { selectedDate, attendance, setAttendance, roster, setRoster } = useAppState();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const rosterInputRef = useRef<HTMLInputElement>(null);
+  
+  const [exportStartDate, setExportStartDate] = useState('');
+  const [exportEndDate, setExportEndDate] = useState('');
 
   const currentAttendance = attendance[selectedDate] || {
     date: selectedDate,
@@ -128,17 +131,22 @@ export const AttendanceView = () => {
   };
 
   const handleExportAttendanceCSV = () => {
-    let csv = "\uFEFF日付,名前,パート,ステータス\n";
+    let csv = "\uFEFF日付," + roster.map(m => m.name).join(",") + "\n";
     const sortedDates = Object.keys(attendance).sort();
     sortedDates.forEach(date => {
+      if (exportStartDate && date < exportStartDate) return;
+      if (exportEndDate && date > exportEndDate) return;
+      
       const records = attendance[date].records;
       const recordMap = Object.fromEntries(records.map(r => [r.memberId, r.status]));
+      const row = [date];
       roster.forEach(member => {
         const isOnLeave = isMemberOnLeave(member, date);
         const status = isOnLeave ? 'on_leave' : (recordMap[member.id] || '未入力');
         const statusMap: Record<string, string> = { present: '出席', absent: '欠席', late: '遅刻', on_leave: '休部', '未入力': '未入力' };
-        csv += `${date},${member.name},${member.part},${statusMap[status] || status}\n`;
+        row.push(statusMap[status] || status);
       });
+      csv += row.join(",") + "\n";
     });
 
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -237,10 +245,15 @@ export const AttendanceView = () => {
             </div>
             <div className="space-y-4">
               <div className="space-y-2">
-                <p className="text-sm font-bold text-slate-500">出席記録</p>
-                <button onClick={handleExportAttendanceCSV} className="w-full flex items-center gap-2 p-3 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl transition border border-slate-200">
+                <p className="text-sm font-bold text-slate-500">出席記録出力</p>
+                <div className="flex gap-2 mb-2 items-center">
+                  <input type="date" value={exportStartDate} onChange={e => setExportStartDate(e.target.value)} className="w-full text-xs p-1.5 border border-slate-200 rounded" />
+                  <span className="text-slate-400">～</span>
+                  <input type="date" value={exportEndDate} onChange={e => setExportEndDate(e.target.value)} className="w-full text-xs p-1.5 border border-slate-200 rounded" />
+                </div>
+                <button onClick={handleExportAttendanceCSV} className="w-full flex items-center justify-center gap-2 p-3 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl transition border border-slate-200">
                   <FileSpreadsheet className="text-emerald-500" size={18} />
-                  <span className="font-medium text-sm">全実績をCSVでダウンロード</span>
+                  <span className="font-medium text-sm">CSVでダウンロード</span>
                 </button>
               </div>
               <div className="space-y-2 pt-2 border-t border-slate-100">
