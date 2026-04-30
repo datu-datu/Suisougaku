@@ -185,11 +185,14 @@ export const RehearsalLogView = () => {
   // Master Piece Management
   const [isEditingPieces, setIsEditingPieces] = useState(false);
   const [newMasterPiece, setNewMasterPiece] = useState('');
+  const [newMasterPieceId, setNewMasterPieceId] = useState('');
 
   const handleAddMasterPiece = () => {
     if (newMasterPiece.trim()) {
-      setMasterPieces([...masterPieces, { id: Date.now().toString(), title: newMasterPiece.trim() }]);
+      const id = newMasterPieceId.trim() || Date.now().toString();
+      setMasterPieces([...masterPieces, { id, title: newMasterPiece.trim() }]);
       setNewMasterPiece('');
+      setNewMasterPieceId('');
     }
   };
 
@@ -463,16 +466,25 @@ export const RehearsalLogView = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="flex gap-2">
+                <div className="flex flex-col gap-2">
                   <input 
                     type="text" 
-                    value={newMasterPiece}
-                    onChange={e => setNewMasterPiece(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && handleAddMasterPiece()}
-                    placeholder="新しい曲名を追加"
-                    className="flex-1 bg-slate-50 border border-slate-200 p-2 rounded-lg text-sm"
+                    value={newMasterPieceId}
+                    onChange={e => setNewMasterPieceId(e.target.value)}
+                    placeholder="ID (省略可)"
+                    className="w-full bg-slate-50 border border-slate-200 p-2 rounded-lg text-sm"
                   />
-                  <button onClick={handleAddMasterPiece} className="bg-blue-600 text-white px-3 py-2 rounded-lg font-bold text-sm">追加</button>
+                  <div className="flex gap-2">
+                    <input 
+                      type="text" 
+                      value={newMasterPiece}
+                      onChange={e => setNewMasterPiece(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && handleAddMasterPiece()}
+                      placeholder="新しい曲名を追加"
+                      className="flex-1 bg-slate-50 border border-slate-200 p-2 rounded-lg text-sm"
+                    />
+                    <button onClick={handleAddMasterPiece} className="bg-blue-600 text-white px-3 py-2 rounded-lg font-bold text-sm shrink-0">追加</button>
+                  </div>
                 </div>
                 
                 <div className="max-h-60 overflow-y-auto border border-slate-200 rounded-lg">
@@ -482,7 +494,9 @@ export const RehearsalLogView = () => {
                     <ul className="divide-y divide-slate-100">
                       {masterPieces.map(mp => (
                         <li key={mp.id} className="p-2 px-3 flex justify-between items-center hover:bg-slate-50">
-                          <span className="font-medium text-sm text-slate-700">{mp.title}</span>
+                          <span className="font-medium text-sm text-slate-700">
+                            {mp.title} <span className="text-xs text-slate-400 ml-2">({mp.id})</span>
+                          </span>
                           <button onClick={() => handleRemoveMasterPiece(mp.id)} className="text-slate-400 hover:text-red-500 p-1">
                             <Trash2 size={16} />
                           </button>
