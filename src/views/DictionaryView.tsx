@@ -119,38 +119,34 @@ export const DictionaryView = () => {
           ))}
         </div>
 
-        <div className="p-4 pt-0 pb-24 md:pb-8">
-          <div className="flex justify-end mb-4">
-            <button onClick={() => openModal()} className="flex items-center gap-2 text-sm bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-indigo-700 shadow-sm transition-all active:scale-95">
-              <Plus size={18} /> 用語を追加
+        <div className="p-4 pt-0 space-y-3 pb-24">
+          <div className="flex justify-end mb-2">
+            <button onClick={() => openModal()} className="flex items-center gap-1 text-sm bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-full font-bold hover:bg-indigo-200">
+              <Plus size={16} /> 用語を追加
             </button>
           </div>
 
           {filteredTerms.length === 0 ? (
-            <div className="text-center py-20 text-slate-400 bg-white rounded-2xl shadow-sm border border-dashed border-slate-200">
-              <p>見つかりませんでした</p>
-            </div>
+            <p className="text-center text-slate-400 mt-10">見つかりませんでした</p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
-              {filteredTerms.map((term, index) => (
-                <div key={index} className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex justify-between items-start hover:shadow-md transition-all group">
-                  <div className="flex-1 pr-2 min-w-0">
-                    <div className="flex items-baseline gap-2 mb-1.5 flex-wrap">
-                      <h3 className="font-bold text-xl text-indigo-900 truncate">{term.term}</h3>
-                      <span className="text-sm text-indigo-400 font-medium">{term.reading}</span>
-                    </div>
-                    <p className="text-slate-600 text-sm mb-4 line-clamp-3 leading-relaxed">{term.meaning}</p>
-                    <div className="inline-block px-2.5 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-wider rounded-md">
-                      {categories.find(c => c.id === term.category)?.label}
-                    </div>
+            filteredTerms.map((term, index) => (
+              <div key={index} className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex justify-between items-start">
+                <div className="flex-1 pr-2">
+                  <div className="flex items-baseline gap-2 mb-1">
+                    <h3 className="font-bold text-lg text-indigo-900">{term.term}</h3>
+                    <span className="text-xs text-indigo-500 font-medium">{term.reading}</span>
                   </div>
-                  <div className="flex flex-col gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => openModal(term)} className="p-2.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all" title="編集"><Edit2 size={18} /></button>
-                    <button onClick={() => handleDelete(term.term)} className="p-2.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all" title="削除"><Trash2 size={18} /></button>
+                  <p className="text-slate-700 text-sm mb-2">{term.meaning}</p>
+                  <div className="inline-block px-2 py-0.5 bg-slate-100 text-slate-500 text-xs rounded">
+                    {categories.find(c => c.id === term.category)?.label}
                   </div>
                 </div>
-              ))}
-            </div>
+                <div className="flex flex-col gap-2 shrink-0">
+                  <button onClick={() => openModal(term)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition"><Edit2 size={16} /></button>
+                  <button onClick={() => handleDelete(term.term)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition"><Trash2 size={16} /></button>
+                </div>
+              </div>
+            ))
           )}
         </div>
       </div>

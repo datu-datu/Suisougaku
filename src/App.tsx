@@ -10,7 +10,7 @@ import { RehearsalLogView } from './views/RehearsalLogView';
 import { AttendanceView } from './views/AttendanceView';
 import { DictionaryView } from './views/DictionaryView';
 import { AIPlannerView } from './views/AIPlannerView';
-import { Navigation } from './components/Navigation';
+import { BottomNav } from './components/BottomNav';
 
 function AppContent() {
   const [activeTab, setActiveTab] = useState('calendar');
@@ -27,20 +27,11 @@ function AppContent() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row h-[100dvh] w-full bg-slate-50 text-slate-900 font-sans overflow-hidden">
-      <div className="hidden md:block">
-        <Navigation activeTab={activeTab} onTabChange={setActiveTab} orientation="vertical" />
+    <div className="flex flex-col h-[100dvh] w-full bg-slate-50 text-slate-900 font-sans mx-auto max-w-md overflow-hidden relative shadow-2xl">
+      <div className="flex-1 overflow-hidden">
+        {renderView()}
       </div>
-      
-      <main className="flex-1 overflow-hidden relative flex flex-col items-center">
-        <div className="w-full h-full max-w-6xl mx-auto md:px-4">
-          {renderView()}
-        </div>
-      </main>
-
-      <div className="md:hidden">
-        <Navigation activeTab={activeTab} onTabChange={setActiveTab} orientation="horizontal" />
-      </div>
+      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
     </div>
   );
 }
