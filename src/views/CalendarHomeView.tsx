@@ -49,9 +49,9 @@ export const CalendarHomeView = ({ onNavigate }: { onNavigate: (tab: string) => 
         <div className="grid grid-cols-7 gap-1">
           {days.map(day => {
             const dateStr = format(day, 'yyyy-MM-dd');
-            const hasLog = !!logs[dateStr];
+            const hasLog = !!logs[dateStr] && (logs[dateStr].pieces?.length > 0 || !!logs[dateStr].overallNotes?.trim());
             const hasAttendance = !!attendance[dateStr];
-            const hasAiLog = !!aiLogs[dateStr] && aiLogs[dateStr].length > 1;
+            const hasAiLog = (aiLogs?.[dateStr]?.length ?? 0) > 1;
             const isSelected = isSameDay(day, new Date(selectedDate));
 
             return (
@@ -121,23 +121,23 @@ export const CalendarHomeView = ({ onNavigate }: { onNavigate: (tab: string) => 
           </div>
           <ChevronRight size={20} className="text-slate-400" />
         </div>
-        {aiLogs[selectedDate] && aiLogs[selectedDate].length > 1 ? (
+        {(aiLogs?.[selectedDate]?.length ?? 0) > 1 ? (
           <div 
             onClick={() => onNavigate('planner')}
-            className="bg-white p-4 rounded-xl shadow-sm mb-3 cursor-pointer border border-transparent hover:border-purple-200 active:bg-slate-50 transition"
+            className="bg-white p-4 rounded-xl shadow-sm mt-3 cursor-pointer border border-transparent hover:border-purple-200 active:bg-slate-50 transition"
           >
             <div className="flex justify-between items-start mb-2">
               <h4 className="font-bold text-slate-800">AI相談</h4>
-              <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full font-medium shrink-0 ml-2">{Math.floor((aiLogs[selectedDate].length - 1) / 2)}往復の会話</span>
+              <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full font-medium shrink-0 ml-2">{Math.floor(((aiLogs?.[selectedDate]?.length ?? 0) - 1) / 2)}往復の会話</span>
             </div>
             <p className="text-sm text-slate-600 line-clamp-2">
-              {aiLogs[selectedDate][aiLogs[selectedDate].length - 1].content}
+              {aiLogs?.[selectedDate]?.[aiLogs[selectedDate].length - 1]?.content}
             </p>
           </div>
         ) : (
           <div 
             onClick={() => onNavigate('planner')}
-            className="bg-white p-4 rounded-xl shadow-sm mb-3 cursor-pointer border border-transparent hover:border-purple-200 active:bg-slate-50 transition flex justify-between items-center"
+            className="bg-white p-4 rounded-xl shadow-sm mt-3 cursor-pointer border border-transparent hover:border-purple-200 active:bg-slate-50 transition flex justify-between items-center"
           >
             <div>
               <h4 className="font-bold text-slate-800">AI相談</h4>

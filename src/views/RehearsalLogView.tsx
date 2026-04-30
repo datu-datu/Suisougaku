@@ -61,8 +61,9 @@ export const RehearsalLogView = () => {
 
     const timer = setTimeout(() => {
       setLogs(prev => {
-        // If pieces and notes are empty, and there was no previous log, we don't necessarily need to create an empty one.
-        // But for simplicity, we just save it.
+        if (pieces.length === 0 && !notes.trim() && !prev[selectedDate]) {
+          return prev;
+        }
         return {
           ...prev,
           [selectedDate]: {
