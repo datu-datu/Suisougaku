@@ -2,6 +2,7 @@ import React from 'react';
 import { useAppState } from '../store/AppStateContext';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, isSameDay, startOfWeek, endOfWeek } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { isMemberOnLeave } from './AttendanceView';
 
 export const CalendarHomeView = ({ onNavigate }: { onNavigate: (tab: string) => void }) => {
   const { selectedDate, setSelectedDate, logs, attendance, roster, aiLogs } = useAppState();
@@ -23,7 +24,8 @@ export const CalendarHomeView = ({ onNavigate }: { onNavigate: (tab: string) => 
     const record = attendance[dateStr];
     if (!record || !record.records) return null;
     const presentCount = record.records.filter(r => r.status === 'present' || r.status === 'late').length;
-    const totalCount = roster.length;
+    const onLeaveCount = roster.filter(m => isMemberOnLeave(m, dateStr)).length;
+    const totalCount = roster.length - onLeaveCount;
     return `${presentCount}/${totalCount}`;
   };
 
@@ -80,7 +82,7 @@ export const CalendarHomeView = ({ onNavigate }: { onNavigate: (tab: string) => 
       <div className="flex-1 shrink-0 pb-10">
         <h3 className="text-lg font-bold mb-3">{format(new Date(selectedDate), 'M月d日')} の記録</h3>
         
-        {logs[selectedDate] ? (
+        {!!logs[selectedDate] && ((logs[selectedDate].pieces?.length ?? 0) > 0 || !!logs[selectedDate].overallNotes?.trim()) ? (
           <div 
             onClick={() => onNavigate('log')}
             className="bg-white p-4 rounded-xl shadow-sm mb-3 cursor-pointer border border-transparent hover:border-blue-200 active:bg-slate-50 transition"
@@ -88,8 +90,8 @@ export const CalendarHomeView = ({ onNavigate }: { onNavigate: (tab: string) => 
             <div className="flex justify-between items-start mb-2">
               <h4 className="font-bold text-blue-900">
                 {logs[selectedDate].pieces && logs[selectedDate].pieces.length > 0
-                  ? logs[selectedDate].pieces.map(p => p.pieceTitle).filter(Boolean).join(', ') || '曲名なし'
-                  : logs[selectedDate].pieceTitle || '曲名なし'}
+                  ? logs[selectedDate].pieces.map(p => p.pieceTitle).filter(Boolean).join(', ') || '曲名未設定'
+                  : logs[selectedDate].pieceTitle || '曲名未設定'}
               </h4>
               <span className="text-xs bg-emerald-100 text-emerald-800 px-2 py-1 rounded-full font-medium shrink-0 ml-2">合奏録あり</span>
             </div>
@@ -123,7 +125,7 @@ export const CalendarHomeView = ({ onNavigate }: { onNavigate: (tab: string) => 
         </div>
         {(aiLogs?.[selectedDate]?.length ?? 0) > 1 ? (
           <div 
-            onClick={() => onNavigate('planner')}
+            onClick={() => onNavigate('ai')}
             className="bg-white p-4 rounded-xl shadow-sm mt-3 cursor-pointer border border-transparent hover:border-purple-200 active:bg-slate-50 transition"
           >
             <div className="flex justify-between items-start mb-2">
@@ -131,12 +133,12 @@ export const CalendarHomeView = ({ onNavigate }: { onNavigate: (tab: string) => 
               <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full font-medium shrink-0 ml-2">{Math.floor(((aiLogs?.[selectedDate]?.length ?? 0) - 1) / 2)}往復の会話</span>
             </div>
             <p className="text-sm text-slate-600 line-clamp-2">
-              {aiLogs?.[selectedDate]?.[aiLogs[selectedDate].length - 1]?.content}
+              {(aiLogs?.[selectedDate] || [])[(aiLogs?.[selectedDate]?.length ?? 0) - 1]?.content}
             </p>
           </div>
         ) : (
           <div 
-            onClick={() => onNavigate('planner')}
+            onClick={() => onNavigate('ai')}
             className="bg-white p-4 rounded-xl shadow-sm mt-3 cursor-pointer border border-transparent hover:border-purple-200 active:bg-slate-50 transition flex justify-between items-center"
           >
             <div>

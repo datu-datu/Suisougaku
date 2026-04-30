@@ -45,6 +45,15 @@ const getPartScore = (partName: string) => {
   return 999;
 };
 
+export const isMemberOnLeave = (member: { leavePeriods?: { startDate: string, endDate?: string }[] }, targetDateStr: string) => {
+  if (!member.leavePeriods) return false;
+  return member.leavePeriods.some(period => {
+    if (period.startDate > targetDateStr) return false;
+    if (period.endDate && period.endDate < targetDateStr) return false;
+    return true;
+  });
+};
+
 export const AttendanceView = () => {
   const { selectedDate, attendance, setAttendance, roster, setRoster } = useAppState();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -123,12 +132,12 @@ export const AttendanceView = () => {
     const sortedDates = Object.keys(attendance).sort();
     sortedDates.forEach(date => {
       const records = attendance[date].records;
-      records.forEach(r => {
-        const member = roster.find(m => m.id === r.memberId);
-        const name = member?.name || '不明';
-        const part = member?.part || '不明';
-        const statusMap: Record<string, string> = { present: '出席', absent: '欠席', late: '遅刻' };
-        csv += `${date},${name},${part},${statusMap[r.status] || r.status}\n`;
+      const recordMap = Object.fromEntries(records.map(r => [r.memberId, r.status]));
+      roster.forEach(member => {
+        const isOnLeave = isMemberOnLeave(member, date);
+        const status = isOnLeave ? 'on_leave' : (recordMap[member.id] || '未入力');
+        const statusMap: Record<string, string> = { present: '出席', absent: '欠席', late: '遅刻', on_leave: '休部', '未入力': '未入力' };
+        csv += `${date},${member.name},${member.part},${statusMap[status] || status}\n`;
       });
     });
 
@@ -176,29 +185,38 @@ export const AttendanceView = () => {
             <h3 className="font-bold text-slate-800 border-b-2 border-emerald-200 pb-1 mb-3">{part}</h3>
             <div className="space-y-2">
               {members.map(member => {
-                const status = getStatus(member.id);
+                const isOnLeave = isMemberOnLeave(member, selectedDate);
+                const status = isOnLeave ? 'on_leave' : getStatus(member.id);
                 return (
-                  <div key={member.id} className="bg-white p-3 rounded-xl shadow-sm flex items-center justify-between">
-                    <span className="font-medium text-slate-700">{member.name}</span>
-                    <div className="flex bg-slate-100 rounded-lg p-1 gap-1">
-                      <button
-                        onClick={() => updateStatus(member.id, 'present')}
-                        className={`w-10 sm:w-12 py-1.5 rounded-md text-[11px] sm:text-xs font-bold transition-colors ${status === 'present' ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-200'}`}
-                      >
-                        出席
-                      </button>
-                      <button
-                        onClick={() => updateStatus(member.id, 'late')}
-                        className={`w-10 sm:w-12 py-1.5 rounded-md text-[11px] sm:text-xs font-bold transition-colors ${status === 'late' ? 'bg-amber-500 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-200'}`}
-                      >
-                        遅刻
-                      </button>
-                      <button
-                        onClick={() => updateStatus(member.id, 'absent')}
-                        className={`w-10 sm:w-12 py-1.5 rounded-md text-[11px] sm:text-xs font-bold transition-colors ${status === 'absent' ? 'bg-red-500 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-200'}`}
-                      >
-                        欠席
-                      </button>
+                  <div key={member.id} className={`p-3 rounded-xl shadow-sm flex items-center justify-between ${isOnLeave ? 'bg-slate-100 opacity-70' : 'bg-white'}`}>
+                    <span className="font-medium text-slate-700">{member.name} {isOnLeave && <span className="ml-2 text-xs font-bold text-slate-500 bg-slate-200 px-1.5 py-0.5 rounded">休部</span>}</span>
+                    <div className={`flex rounded-lg p-1 gap-1 ${isOnLeave ? 'bg-transparent' : 'bg-slate-100'}`}>
+                      {!isOnLeave ? (
+                        <>
+                          <button
+                            onClick={() => updateStatus(member.id, 'present')}
+                            className={`w-10 sm:w-12 py-1.5 rounded-md text-[11px] sm:text-xs font-bold transition-colors ${status === 'present' ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-200'}`}
+                          >
+                            出席
+                          </button>
+                          <button
+                            onClick={() => updateStatus(member.id, 'late')}
+                            className={`w-10 sm:w-12 py-1.5 rounded-md text-[11px] sm:text-xs font-bold transition-colors ${status === 'late' ? 'bg-amber-500 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-200'}`}
+                          >
+                            遅刻
+                          </button>
+                          <button
+                            onClick={() => updateStatus(member.id, 'absent')}
+                            className={`w-10 sm:w-12 py-1.5 rounded-md text-[11px] sm:text-xs font-bold transition-colors ${status === 'absent' ? 'bg-red-500 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-200'}`}
+                          >
+                            欠席
+                          </button>
+                        </>
+                      ) : (
+                        <div className="w-full text-center px-4 py-1.5 text-xs font-bold text-slate-400">
+                          休部期間中
+                        </div>
+                      )}
                     </div>
                   </div>
                 );

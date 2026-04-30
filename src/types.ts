@@ -1,7 +1,13 @@
+export interface LeavePeriod {
+  startDate: string; // YYYY-MM-DD
+  endDate?: string; // YYYY-MM-DD (optional, if undefined, it's ongoing)
+}
+
 export interface Member {
   id: string;
   name: string;
   part: string;
+  leavePeriods?: LeavePeriod[];
 }
 
 export interface PracticeMark {
@@ -32,7 +38,7 @@ export interface RehearsalLog {
   marks?: PracticeMark[];
 }
 
-export type AttendanceStatus = 'present' | 'absent' | 'late';
+export type AttendanceStatus = 'present' | 'absent' | 'late' | 'on_leave';
 
 export interface AttendanceRecord {
   memberId: string;
