@@ -23,7 +23,13 @@ interface AppState {
 
 const AppStateContext = createContext<AppState | undefined>(undefined);
 
-const todayStr = new Date().toISOString().split('T')[0];
+const todayStr = (() => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+})();
 
 export const AppStateProvider = ({ children }: { children: ReactNode }) => {
   const [logs, setLogs] = useLocalStorage<Record<string, RehearsalLog>>('ensemble_logs', {});

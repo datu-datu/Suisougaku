@@ -131,17 +131,19 @@ export const AttendanceView = () => {
   };
 
   const handleExportAttendanceCSV = () => {
-    let csv = "\uFEFF日付," + roster.map(m => m.name).join(",") + "\n";
-    const sortedDates = Object.keys(attendance).sort();
-    sortedDates.forEach(date => {
-      if (exportStartDate && date < exportStartDate) return;
-      if (exportEndDate && date > exportEndDate) return;
-      
-      const records = attendance[date].records;
-      const recordMap = Object.fromEntries(records.map(r => [r.memberId, r.status]));
-      const row = [date];
-      roster.forEach(member => {
+    const sortedDates = Object.keys(attendance)
+      .filter(date => (!exportStartDate || date >= exportStartDate) && (!exportEndDate || date <= exportEndDate))
+      .sort();
+
+    let csv = "\uFEFF,";
+    csv += sortedDates.join(",") + "\n";
+
+    roster.forEach(member => {
+      const row = [member.name];
+      sortedDates.forEach(date => {
         const isOnLeave = isMemberOnLeave(member, date);
+        const records = attendance[date].records;
+        const recordMap = Object.fromEntries(records.map(r => [r.memberId, r.status]));
         const status = isOnLeave ? 'on_leave' : (recordMap[member.id] || '未入力');
         const statusMap: Record<string, string> = { present: '出席', absent: '欠席', late: '遅刻', on_leave: '休部', '未入力': '未入力' };
         row.push(statusMap[status] || status);
@@ -197,31 +199,31 @@ export const AttendanceView = () => {
                 const status = isOnLeave ? 'on_leave' : getStatus(member.id);
                 return (
                   <div key={member.id} className={`p-3 rounded-xl shadow-sm flex items-center justify-between ${isOnLeave ? 'bg-slate-100 opacity-70' : 'bg-white'}`}>
-                    <span className="font-medium text-slate-700">{member.name} {isOnLeave && <span className="ml-2 text-xs font-bold text-slate-500 bg-slate-200 px-1.5 py-0.5 rounded">休部</span>}</span>
-                    <div className={`flex rounded-lg p-1 gap-1 ${isOnLeave ? 'bg-transparent' : 'bg-slate-100'}`}>
+                    <span className="font-medium text-slate-700 shrink-0">{member.name} {isOnLeave && <span className="ml-2 text-xs font-bold text-slate-500 bg-slate-200 px-1.5 py-0.5 rounded">休部</span>}</span>
+                    <div className={`flex rounded-xl p-1 gap-1.5 ${isOnLeave ? 'bg-transparent' : 'bg-slate-100 flex-1 ml-4'}`}>
                       {!isOnLeave ? (
                         <>
                           <button
                             onClick={() => updateStatus(member.id, 'present')}
-                            className={`w-10 sm:w-12 py-1.5 rounded-md text-[11px] sm:text-xs font-bold transition-colors ${status === 'present' ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-200'}`}
+                            className={`flex-1 py-3 rounded-lg text-xs sm:text-sm font-bold transition-all active:scale-95 ${status === 'present' ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-400 bg-white shadow-sm ring-1 ring-slate-200'}`}
                           >
                             出席
                           </button>
                           <button
                             onClick={() => updateStatus(member.id, 'late')}
-                            className={`w-10 sm:w-12 py-1.5 rounded-md text-[11px] sm:text-xs font-bold transition-colors ${status === 'late' ? 'bg-amber-500 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-200'}`}
+                            className={`flex-1 py-3 rounded-lg text-xs sm:text-sm font-bold transition-all active:scale-95 ${status === 'late' ? 'bg-amber-500 text-white shadow-md' : 'text-slate-400 bg-white shadow-sm ring-1 ring-slate-200'}`}
                           >
                             遅刻
                           </button>
                           <button
                             onClick={() => updateStatus(member.id, 'absent')}
-                            className={`w-10 sm:w-12 py-1.5 rounded-md text-[11px] sm:text-xs font-bold transition-colors ${status === 'absent' ? 'bg-red-500 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-200'}`}
+                            className={`flex-1 py-3 rounded-lg text-xs sm:text-sm font-bold transition-all active:scale-95 ${status === 'absent' ? 'bg-red-500 text-white shadow-md' : 'text-slate-400 bg-white shadow-sm ring-1 ring-slate-200'}`}
                           >
                             欠席
                           </button>
                         </>
                       ) : (
-                        <div className="w-full text-center px-4 py-1.5 text-xs font-bold text-slate-400">
+                        <div className="w-full text-center px-4 py-3 text-xs font-bold text-slate-400">
                           休部期間中
                         </div>
                       )}
