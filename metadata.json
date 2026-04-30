@@ -1,0 +1,6 @@
+{
+  "name": "吹奏楽ディレクターズノート",
+  "description": "吹奏楽の指導者向け合奏振り返りアプリ。練習記録、出欠管理、音楽用語辞典、AIとの振り返り対話が可能。",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

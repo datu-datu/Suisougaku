@@ -1,0 +1,28 @@
+import { DictionaryTerm } from "../types";
+
+export const musicDictionary: DictionaryTerm[] = [
+  { term: "Allegro", reading: "アレグロ", meaning: "速く、陽気に", category: "tempo" },
+  { term: "Andante", reading: "アンダンテ", meaning: "歩くような速さで", category: "tempo" },
+  { term: "Adagio", reading: "アダージョ", meaning: "ゆるやかに", category: "tempo" },
+  { term: "Moderato", reading: "モデラート", meaning: "中くらいの速さで", category: "tempo" },
+  { term: "Presto", reading: "プレスト", meaning: "急速に", category: "tempo" },
+  { term: "Ritardando (rit.)", reading: "リタルダンド", meaning: "だんだん遅く", category: "tempo" },
+  { term: "Accelerando (accel.)", reading: "アッチェレランド", meaning: "だんだん速く", category: "tempo" },
+  { term: "Forte (f)", reading: "フォルテ", meaning: "強く", category: "dynamics" },
+  { term: "Piano (p)", reading: "ピアノ", meaning: "弱く", category: "dynamics" },
+  { term: "Mezzo Forte (mf)", reading: "メゾ・フォルテ", meaning: "少し強く", category: "dynamics" },
+  { term: "Mezzo Piano (mp)", reading: "メゾ・ピアノ", meaning: "少し弱く", category: "dynamics" },
+  { term: "Crescendo (cresc.)", reading: "クレッシェンド", meaning: "だんだん強く", category: "dynamics" },
+  { term: "Diminuendo (dim.)", reading: "ディミヌエンド", meaning: "だんだん弱く", category: "dynamics" },
+  { term: "Espressivo", reading: "エスプレッシーヴォ", meaning: "表情豊かに", category: "expression" },
+  { term: "Cantabile", reading: "カンタービレ", meaning: "歌うように", category: "expression" },
+  { term: "Dolce", reading: "ドルチェ", meaning: "甘く、柔らかく", category: "expression" },
+  { term: "Legato", reading: "レガート", meaning: "滑らかに", category: "articulation" },
+  { term: "Staccato", reading: "スタッカート", meaning: "音を短く切って", category: "articulation" },
+  { term: "Tenuto", reading: "テヌート", meaning: "音の長さを十分に保って", category: "articulation" },
+  { term: "Marcato", reading: "マルカート", meaning: "一つ一つの音をはっきりと", category: "articulation" },
+  { term: "A tempo", reading: "ア・テンポ", meaning: "もとの速さで", category: "tempo" },
+  { term: "Divisi (div.)", reading: "ディヴィジ", meaning: "分けて演奏する", category: "other" },
+  { term: "Tutti", reading: "トゥッティ", meaning: "全員で", category: "other" },
+  { term: "Soli", reading: "ソリ", meaning: "特定のパート全員で（または一人ずつ）", category: "other" },
+];

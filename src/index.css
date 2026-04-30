@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+}
+
+body {
+  background-color: #f8fafc;
+  margin: 0;
+  padding: 0;
+  /* Prevent overscroll bounce on mobile to keep app-like feel */
+  overscroll-behavior-y: none;
+}
+
+/* Hide scrollbar for clean UI but keep functionality */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Padding safe area for iOS notches */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
