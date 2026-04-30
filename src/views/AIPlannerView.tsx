@@ -28,10 +28,21 @@ interface Message {
 }
 
 export const AIPlannerView = () => {
-  const { selectedDate, logs } = useAppState();
-  const [messages, setMessages] = useState<Message[]>([
+  const { selectedDate, logs, aiLogs, setAiLogs } = useAppState();
+  const messages = aiLogs[selectedDate] || [
     { role: 'model', content: '今後の練習計画や指導の悩みについて、なんでも相談してください！今日の合奏録のデータも踏まえてアドバイスできます。' }
-  ]);
+  ];
+  
+  const setMessages = (setter: React.SetStateAction<Message[]>) => {
+    setAiLogs(prev => {
+      const current = prev[selectedDate] || [
+        { role: 'model', content: '今後の練習計画や指導の悩みについて、なんでも相談してください！今日の合奏録のデータも踏まえてアドバイスできます。' }
+      ];
+      const next = typeof setter === 'function' ? (setter as any)(current) : setter;
+      return { ...prev, [selectedDate]: next };
+    });
+  };
+
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);

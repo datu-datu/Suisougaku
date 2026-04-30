@@ -44,6 +44,11 @@ export interface DailyAttendance {
   records: AttendanceRecord[];
 }
 
+export interface Message {
+  role: 'user' | 'model';
+  content: string;
+}
+
 export interface DictionaryTerm {
   term: string;
   reading: string;

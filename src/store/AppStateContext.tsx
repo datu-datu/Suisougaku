@@ -1,6 +1,6 @@
 import React, { createContext, useContext, ReactNode, useState } from 'react';
 import { useLocalStorage } from '../lib/useLocalStorage';
-import { RehearsalLog, DailyAttendance, Member, DictionaryTerm, Piece } from '../types';
+import { RehearsalLog, DailyAttendance, Member, DictionaryTerm, Piece, Message } from '../types';
 import { defaultRoster } from '../data/mockMembers';
 import { musicDictionary } from '../data/dictionary';
 
@@ -17,6 +17,8 @@ interface AppState {
   setDictionary: React.Dispatch<React.SetStateAction<DictionaryTerm[]>>;
   pieces: Piece[];
   setPieces: React.Dispatch<React.SetStateAction<Piece[]>>;
+  aiLogs: Record<string, Message[]>;
+  setAiLogs: React.Dispatch<React.SetStateAction<Record<string, Message[]>>>;
 }
 
 const AppStateContext = createContext<AppState | undefined>(undefined);
@@ -29,6 +31,7 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
   const [roster, setRoster] = useLocalStorage<Member[]>('ensemble_roster', defaultRoster);
   const [dictionary, setDictionary] = useLocalStorage<DictionaryTerm[]>('ensemble_dictionary', musicDictionary);
   const [pieces, setPieces] = useLocalStorage<Piece[]>('ensemble_pieces', []);
+  const [aiLogs, setAiLogs] = useLocalStorage<Record<string, Message[]>>('ensemble_ai_logs', {});
 
   const [date, setDate] = useState(todayStr);
 
@@ -45,7 +48,9 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
       dictionary,
       setDictionary,
       pieces,
-      setPieces
+      setPieces,
+      aiLogs,
+      setAiLogs
     }}>
       {children}
     </AppStateContext.Provider>

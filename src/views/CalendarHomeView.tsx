@@ -4,7 +4,7 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isTod
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export const CalendarHomeView = ({ onNavigate }: { onNavigate: (tab: string) => void }) => {
-  const { selectedDate, setSelectedDate, logs, attendance, roster } = useAppState();
+  const { selectedDate, setSelectedDate, logs, attendance, roster, aiLogs } = useAppState();
   const [currentMonth, setCurrentMonth] = React.useState(new Date(selectedDate));
 
   const days = eachDayOfInterval({
@@ -51,6 +51,7 @@ export const CalendarHomeView = ({ onNavigate }: { onNavigate: (tab: string) => 
             const dateStr = format(day, 'yyyy-MM-dd');
             const hasLog = !!logs[dateStr];
             const hasAttendance = !!attendance[dateStr];
+            const hasAiLog = !!aiLogs[dateStr] && aiLogs[dateStr].length > 1;
             const isSelected = isSameDay(day, new Date(selectedDate));
 
             return (
@@ -68,6 +69,7 @@ export const CalendarHomeView = ({ onNavigate }: { onNavigate: (tab: string) => 
                 <div className="flex gap-1 absolute bottom-1">
                   {hasLog && <div className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white' : 'bg-emerald-500'}`} />}
                   {hasAttendance && <div className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white' : 'bg-amber-500'}`} />}
+                  {hasAiLog && <div className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white' : 'bg-purple-500'}`} />}
                 </div>
               </button>
             );
@@ -119,6 +121,32 @@ export const CalendarHomeView = ({ onNavigate }: { onNavigate: (tab: string) => 
           </div>
           <ChevronRight size={20} className="text-slate-400" />
         </div>
+        {aiLogs[selectedDate] && aiLogs[selectedDate].length > 1 ? (
+          <div 
+            onClick={() => onNavigate('planner')}
+            className="bg-white p-4 rounded-xl shadow-sm mb-3 cursor-pointer border border-transparent hover:border-purple-200 active:bg-slate-50 transition"
+          >
+            <div className="flex justify-between items-start mb-2">
+              <h4 className="font-bold text-slate-800">AI相談</h4>
+              <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full font-medium shrink-0 ml-2">{Math.floor((aiLogs[selectedDate].length - 1) / 2)}往復の会話</span>
+            </div>
+            <p className="text-sm text-slate-600 line-clamp-2">
+              {aiLogs[selectedDate][aiLogs[selectedDate].length - 1].content}
+            </p>
+          </div>
+        ) : (
+          <div 
+            onClick={() => onNavigate('planner')}
+            className="bg-white p-4 rounded-xl shadow-sm mb-3 cursor-pointer border border-transparent hover:border-purple-200 active:bg-slate-50 transition flex justify-between items-center"
+          >
+            <div>
+              <h4 className="font-bold text-slate-800">AI相談</h4>
+              <p className="text-xs text-slate-500 mt-1">練習計画や指導の悩みなどを相談できます</p>
+            </div>
+            <ChevronRight size={20} className="text-slate-400" />
+          </div>
+        )}
+
       </div>
     </div>
   );
