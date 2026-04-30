@@ -4,6 +4,47 @@ import { format } from 'date-fns';
 import { AttendanceStatus } from '../types';
 import { Download, Upload, Settings, X, FileJson, FileSpreadsheet } from 'lucide-react';
 
+const SCORE_WEIGHTS: Record<string, number> = {
+  'piccolo': 10, 'ピッコロ': 10,
+  'flute': 20, 'フルート': 20,
+  'oboe': 30, 'オーボエ': 30,
+  'bassoon': 40, 'ファゴット': 40,
+  'eb clarinet': 50, 'e♭クラリネット': 50, 'エスクラ': 50,
+  'bass clarinet': 60, 'バスクラリネット': 60, 'バスクラ': 60,
+  'alto clarinet': 70, 'アルトクラリネット': 70,
+  'contrabass clarinet': 80, 'コントラバスクラリネット': 80,
+  'clarinet': 90, 'クラリネット': 90,
+  'soprano sax': 100, 'ソプラノサックス': 100,
+  'alto sax': 110, 'アルトサックス': 110,
+  'tenor sax': 120, 'テナーサックス': 120,
+  'baritone sax': 130, 'bari sax': 130, 'バリトンサックス': 130, 'バリサク': 130,
+  'trumpet': 140, 'トランペット': 140,
+  'cornet': 150, 'コルネット': 150,
+  'fluegelhorn': 155, 'フリューゲルホルン': 155,
+  'horn': 160, 'ホルン': 160,
+  'bass trombone': 170, 'バストロンボーン': 170, 'バストロ': 170,
+  'trombone': 180, 'トロンボーン': 180,
+  'euphonium': 190, 'ユーフォニアム': 190, 'ユーフォ': 190,
+  'tuba': 200, 'チューバ': 200, 'テューバ': 200,
+  'string bass': 210, 'ストリングベース': 210, 'contrabass': 210, 'コントラバス': 210, '弦バス': 210,
+  'timpani': 220, 'ティンパニ': 220,
+  'percussion': 230, 'パーカッション': 230, '打楽器': 230,
+  'piano': 240, 'ピアノ': 240,
+  'harp': 250, 'ハープ': 250
+};
+
+const SORTED_SCORE_KEYS = Object.keys(SCORE_WEIGHTS).sort((a, b) => b.length - a.length);
+
+const getPartScore = (partName: string) => {
+  const lower = partName.toLowerCase();
+  for (const key of SORTED_SCORE_KEYS) {
+    if (lower.includes(key)) {
+      return SCORE_WEIGHTS[key];
+    }
+  }
+  return 999;
+};
+
 export const AttendanceView = () => {
   const { selectedDate, attendance, setAttendance, roster, setRoster } = useAppState();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -121,7 +162,16 @@ export const AttendanceView = () => {
             名簿データがありません。設定からインポートしてください。
           </div>
         )}
-        {Object.entries(rosterByPart).map(([part, members]) => (
+        {Object.keys(rosterByPart).sort((a, b) => {
+          const scoreA = getPartScore(a);
+          const scoreB = getPartScore(b);
+          if (scoreA !== scoreB) {
+            return scoreA - scoreB;
+          }
+          return a.localeCompare(b);
+        }).map(part => {
+          const members = rosterByPart[part];
+          return (
           <div key={part} className="mb-6">
             <h3 className="font-bold text-slate-800 border-b-2 border-emerald-200 pb-1 mb-3">{part}</h3>
             <div className="space-y-2">
@@ -155,7 +205,7 @@ export const AttendanceView = () => {
               })}
             </div>
           </div>
-        ))}
+        )})}
       </div>
 
       <input type="file" accept=".json" ref={rosterInputRef} className="hidden" onChange={handleImportRoster} />
