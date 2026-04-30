@@ -282,141 +282,161 @@ export const RehearsalLogView = () => {
         </button>
       </div>
 
-      <div className="flex-1 overflow-auto p-4 pb-24">
-        {pieces.length === 0 && (
-          <div className="text-center py-10 text-slate-500 bg-white rounded-xl shadow-sm border border-slate-100">
-            <Music size={40} className="mx-auto text-blue-200 mb-3" />
-            <p className="font-bold mb-2">記録された曲がありません</p>
-            <button 
-              onClick={handleAddPiece}
-              className="mt-2 text-blue-600 bg-blue-50 px-4 py-2 rounded-lg font-bold hover:bg-blue-100 transition"
-            >
-              曲を追加する
-            </button>
-          </div>
-        )}
-
-        {activePiece && (
-          <div className="bg-white rounded-xl shadow-sm p-4 mb-6 border border-slate-100">
-            <div className="flex justify-between items-start mb-4 pb-3 border-b border-slate-100">
-              <div className="flex-1 mr-2 w-full">
-                <label className="block text-sm font-bold text-slate-700 mb-1">練習曲名</label>
-                {/* Fallback to custom input if they type something not in the list, but primarily use a datalist or custom combobox. Let's use a standard select combined with an option for manual. Since native select is rigid, we map masterPieces. */}
-                <select
-                  value={masterPieces.some(mp => mp.title === activePiece.pieceTitle) ? activePiece.pieceTitle : (activePiece.pieceTitle ? 'custom' : '')}
-                  onChange={(e) => {
-                    if (e.target.value === 'custom') {
-                      // Keep existing or empty
-                    } else if (e.target.value === '') {
-                      updatePieceTitle(activePiece.id, '');
-                    } else {
-                      updatePieceTitle(activePiece.id, e.target.value);
-                    }
-                  }}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 font-bold text-blue-900 outline-none focus:border-blue-500 transition mb-2"
-                >
-                  <option value="">-- 曲を選択 --</option>
-                  {masterPieces.map(mp => (
-                    <option key={mp.id} value={mp.title}>{mp.title}</option>
-                  ))}
-                  <option value="custom">その他 (直接入力)</option>
-                </select>
-
-                {(!masterPieces.some(mp => mp.title === activePiece.pieceTitle) && activePiece.pieceTitle !== '') || masterPieces.length === 0 ? (
-                  <input 
-                    type="text" 
-                    value={activePiece.pieceTitle}
-                    onChange={e => updatePieceTitle(activePiece.id, e.target.value)}
-                    placeholder="曲名を直接入力..."
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 font-bold text-blue-900 outline-none focus:border-blue-500 transition"
-                  />
-                ) : null}
-              </div>
+      <div className="flex-1 overflow-auto p-4 pb-24 md:pb-8 flex flex-col md:flex-row gap-6">
+        {/* Main Content Areas */}
+        <div className="flex-1 space-y-6">
+          {pieces.length === 0 ? (
+            <div className="text-center py-20 text-slate-500 bg-white rounded-xl shadow-sm border border-slate-100 flex flex-col items-center justify-center h-full">
+              <Music size={48} className="text-blue-200 mb-4" />
+              <p className="font-bold text-lg mb-2">記録された曲がありません</p>
+              <p className="text-sm text-slate-400 mb-6">練習を開始するには曲を追加してください</p>
               <button 
-                onClick={() => removePiece(activePiece.id)}
-                className="mt-6 p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors shrink-0"
-                title="この曲の記録を削除"
+                onClick={handleAddPiece}
+                className="text-blue-600 bg-blue-50 px-6 py-3 rounded-xl font-bold hover:bg-blue-100 transition-all shadow-sm active:scale-95"
               >
-                <Trash2 size={20} />
+                曲を追加する
               </button>
             </div>
+          ) : (
+            activePiece && (
+              <div className="bg-white rounded-2xl shadow-md p-6 border border-slate-100">
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
+                  <div className="flex-1">
+                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5">練習曲名</label>
+                    <div className="flex flex-col gap-2">
+                      <select
+                        value={masterPieces.some(mp => mp.title === activePiece.pieceTitle) ? activePiece.pieceTitle : (activePiece.pieceTitle ? 'custom' : '')}
+                        onChange={(e) => {
+                          if (e.target.value === 'custom') {
+                            // Keep existing or empty
+                          } else if (e.target.value === '') {
+                            updatePieceTitle(activePiece.id, '');
+                          } else {
+                            updatePieceTitle(activePiece.id, e.target.value);
+                          }
+                        }}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-blue-900 outline-none focus:border-blue-500 transition-all appearance-none"
+                        style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%2364748b\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'%3E%3C/path%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1.2rem' }}
+                      >
+                        <option value="">-- 曲を選択 --</option>
+                        {masterPieces.map(mp => (
+                          <option key={mp.id} value={mp.title}>{mp.title}</option>
+                        ))}
+                        <option value="custom">その他 (直接入力)</option>
+                      </select>
 
-            <div className="mb-2">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="font-bold text-slate-800 text-sm">練習番号ごとの記録</h3>
-                <button 
-                  onClick={() => handleAddMark(activePiece.id)}
-                  className="text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-1 transition"
-                >
-                  <Plus size={16} /> 番号追加
-                </button>
-              </div>
-
-              {activePiece.marks.length === 0 && (
-                <div className="text-center py-6 text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-300">
-                  練習番号を追加して記録しましょう
-                </div>
-              )}
-
-              <div className="space-y-4">
-                {activePiece.marks.map((mark) => (
-                  <div key={mark.id} className="bg-slate-50 rounded-xl p-3 border-l-4 border-l-blue-500 relative">
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="flex-1 max-w-[50%] xs:max-w-[200px]">
-                        <label className="block text-xs font-bold text-slate-500 mb-1">練習番号 / 小節</label>
+                      {(!masterPieces.some(mp => mp.title === activePiece.pieceTitle) && activePiece.pieceTitle !== '') || masterPieces.length === 0 ? (
                         <input 
                           type="text" 
-                          value={mark.markName}
-                          onChange={e => updateMark(activePiece.id, mark.id, 'markName', e.target.value)}
-                          placeholder="例: A, [15]~"
-                          className="w-full bg-white border border-slate-200 rounded-md p-2 font-bold text-sm outline-none focus:border-blue-500 transition"
+                          value={activePiece.pieceTitle}
+                          onChange={e => updatePieceTitle(activePiece.id, e.target.value)}
+                          placeholder="曲名を直接入力..."
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-blue-900 outline-none focus:border-blue-500 transition-all animate-in slide-in-from-top-2"
                         />
-                      </div>
-                      <button 
-                        onClick={() => removeMark(activePiece.id, mark.id)}
-                        className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-100 rounded-md transition mt-4"
-                      >
-                        <X size={18} />
-                      </button>
-                    </div>
-                    
-                    <div className="mb-3">
-                      <label className="block text-xs font-bold text-slate-500 mb-1">指導したこと</label>
-                      <textarea 
-                        value={mark.guidance}
-                        onChange={e => updateMark(activePiece.id, mark.id, 'guidance', e.target.value)}
-                        placeholder="ピッチを合わせる、クレッシェンドの方向性..."
-                        rows={4}
-                        className="w-full bg-white border border-slate-200 rounded-md p-2 text-sm outline-none focus:border-blue-500 resize-none transition whitespace-pre-wrap"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 mb-1">残っている課題</label>
-                      <textarea 
-                        value={mark.remainingTasks}
-                        onChange={e => updateMark(activePiece.id, mark.id, 'remainingTasks', e.target.value)}
-                        placeholder="木管の連符がまだ合っていない、金管のスタミナ持続"
-                        rows={4}
-                        className="w-full bg-white border border-slate-200 rounded-md p-2 text-sm outline-none focus:border-blue-500 resize-none transition whitespace-pre-wrap"
-                      />
+                      ) : null}
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
+                  <button 
+                    onClick={() => removePiece(activePiece.id)}
+                    className="p-3 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all shrink-0 self-end"
+                    title="この曲の記録を削除"
+                  >
+                    <Trash2 size={22} />
+                  </button>
+                </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-4 mb-8">
-          <label className="block text-sm font-bold text-slate-700 mb-2">全体を通した特記事項・所感</label>
-          <textarea 
-            value={notes}
-            onChange={e => setNotes(e.target.value)}
-            placeholder="本番に向けて全体のテンポ感は掴めてきたが、細かいアーティキュレーションがまだ甘い。"
-            rows={5}
-            className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition resize-none whitespace-pre-wrap"
-          />
+                <div>
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="font-black text-slate-800 text-sm uppercase tracking-widest flex items-center gap-2">
+                      <Edit2 size={16} className="text-blue-500" />
+                      練習番号ごとの記録
+                    </h3>
+                    <button 
+                      onClick={() => handleAddMark(activePiece.id)}
+                      className="text-blue-600 bg-blue-50 hover:bg-blue-100 px-4 py-2 rounded-xl text-sm font-black flex items-center gap-2 transition-all shadow-sm active:scale-95"
+                    >
+                      <Plus size={18} /> 番号追加
+                    </button>
+                  </div>
+
+                  {activePiece.marks.length === 0 && (
+                    <div className="text-center py-12 text-slate-400 bg-slate-50 rounded-2xl border border-dashed border-slate-300 flex flex-col items-center">
+                      <p className="text-sm font-medium">練習番号を追加して詳細な記録を残しましょう</p>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 min-[1400px]:grid-cols-2 gap-4">
+                    {activePiece.marks.map((mark) => (
+                      <div key={mark.id} className="bg-slate-50 rounded-2xl p-5 border-l-4 border-l-blue-500 relative shadow-sm group">
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="w-40">
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">練習番号 / 小節</label>
+                            <input 
+                              type="text" 
+                              value={mark.markName}
+                              onChange={e => updateMark(activePiece.id, mark.id, 'markName', e.target.value)}
+                              placeholder="例: A, [15]~"
+                              className="w-full bg-white border border-slate-200 rounded-lg p-2.5 font-black text-sm outline-none focus:border-blue-500 transition-all"
+                            />
+                          </div>
+                          <button 
+                            onClick={() => removeMark(activePiece.id, mark.id)}
+                            className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-100 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                          >
+                            <X size={20} />
+                          </button>
+                        </div>
+                        
+                        <div className="space-y-4">
+                          <div>
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">指導したこと</label>
+                            <textarea 
+                              value={mark.guidance}
+                              onChange={e => updateMark(activePiece.id, mark.id, 'guidance', e.target.value)}
+                              placeholder="具体的な指導内容..."
+                              rows={3}
+                              className="w-full bg-white border border-slate-200 rounded-lg p-3 text-sm outline-none focus:border-blue-500 resize-none transition-all whitespace-pre-wrap"
+                            />
+                          </div>
+                          
+                          <div>
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">次回の課題</label>
+                            <textarea 
+                              value={mark.remainingTasks}
+                              onChange={e => updateMark(activePiece.id, mark.id, 'remainingTasks', e.target.value)}
+                              placeholder="残っている課題..."
+                              rows={3}
+                              className="w-full bg-white border border-slate-200 rounded-lg p-3 text-sm outline-none focus:border-blue-500 resize-none transition-all whitespace-pre-wrap"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )
+          )}
+        </div>
+
+        {/* Sidebar for Notes */}
+        <div className="md:w-72 lg:w-80 shrink-0 space-y-6">
+          <div className="bg-white rounded-2xl shadow-md p-5 border border-slate-100 h-fit sticky top-4">
+            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+              <Save size={14} className="text-blue-500" />
+              全体的な所感
+            </label>
+            <textarea 
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              placeholder="今日の合奏全体のまとめ..."
+              rows={12}
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all resize-none whitespace-pre-wrap min-h-[300px]"
+            />
+            <p className="mt-3 text-[10px] text-slate-400 italic">
+              ※入力内容は1秒後に自動保存されます
+            </p>
+          </div>
         </div>
       </div>
 

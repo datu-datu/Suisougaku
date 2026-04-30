@@ -189,16 +189,16 @@ export const AttendanceView = () => {
         }).map(part => {
           const members = rosterByPart[part];
           return (
-          <div key={part} className="mb-6">
+          <div key={part} className="mb-6 mb-8">
             <h3 className="font-bold text-slate-800 border-b-2 border-emerald-200 pb-1 mb-3">{part}</h3>
-            <div className="space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
               {members.map(member => {
                 const isOnLeave = isMemberOnLeave(member, selectedDate);
                 const status = isOnLeave ? 'on_leave' : getStatus(member.id);
                 return (
-                  <div key={member.id} className={`p-3 rounded-xl shadow-sm flex items-center justify-between ${isOnLeave ? 'bg-slate-100 opacity-70' : 'bg-white'}`}>
-                    <span className="font-medium text-slate-700">{member.name} {isOnLeave && <span className="ml-2 text-xs font-bold text-slate-500 bg-slate-200 px-1.5 py-0.5 rounded">休部</span>}</span>
-                    <div className={`flex rounded-lg p-1 gap-1 ${isOnLeave ? 'bg-transparent' : 'bg-slate-100'}`}>
+                  <div key={member.id} className={`p-3 rounded-xl shadow-sm flex items-center justify-between border border-transparent transition-all hover:shadow-md ${isOnLeave ? 'bg-slate-100 opacity-70' : 'bg-white hover:border-emerald-100'}`}>
+                    <span className="font-medium text-slate-700 truncate mr-2" title={member.name}>{member.name} {isOnLeave && <span className="ml-2 text-[10px] font-bold text-slate-500 bg-slate-200 px-1.5 py-0.5 rounded">休部</span>}</span>
+                    <div className={`flex rounded-lg p-0.5 gap-0.5 shrink-0 ${isOnLeave ? 'bg-transparent' : 'bg-slate-100'}`}>
                       {!isOnLeave ? (
                         <>
                           <button
