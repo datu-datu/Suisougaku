@@ -1,9 +1,26 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAppState } from '../store/AppStateContext';
-import { Send, Bot, User, Sparkles } from 'lucide-react';
+import { Send, Bot, User, Sparkles, Settings as SettingsIcon, X } from 'lucide-react';
 import { GoogleGenAI } from '@google/genai';
+import { useLocalStorage } from '../lib/useLocalStorage';
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+type AIProvider = 'gemini' | 'ollama';
+
+interface AIConfig {
+  provider: AIProvider;
+  geminiApiKey: string;
+  geminiModel: string;
+  ollamaEndpoint: string;
+  ollamaModel: string;
+}
+
+const DEFAULT_AI_CONFIG: AIConfig = {
+  provider: 'gemini',
+  geminiApiKey: '',
+  geminiModel: 'gemini-2.5-flash',
+  ollamaEndpoint: 'http://localhost:11434',
+  ollamaModel: 'llama3',
+};
 
 interface Message {
   role: 'user' | 'model';
@@ -19,6 +36,15 @@ export const AIPlannerView = () => {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const [aiConfig, setAiConfig] = useLocalStorage<AIConfig>('ai_planner_config', DEFAULT_AI_CONFIG);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  const [tempConfig, setTempConfig] = useState<AIConfig>(aiConfig);
+
+  useEffect(() => {
+    setTempConfig(aiConfig);
+  }, [aiConfig, isSettingsOpen]);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -27,8 +53,19 @@ export const AIPlannerView = () => {
     scrollToBottom();
   }, [messages]);
 
+  const handleSaveSettings = () => {
+    setAiConfig(tempConfig);
+    setIsSettingsOpen(false);
+  };
+
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
+
+    if (aiConfig.provider === 'gemini' && !aiConfig.geminiApiKey) {
+      setMessages(prev => [...prev, { role: 'model', content: 'Gemini APIキーが設定されていません。右上の設定から入力してください。' }]);
+      setIsSettingsOpen(true);
+      return;
+    }
 
     const userMessage = input.trim();
     setInput('');
@@ -50,33 +87,164 @@ export const AIPlannerView = () => {
       }
       systemContext += "上記の状況を踏まえ、ユーザーの質問に実践的かつ具体的に答えてください。長すぎず簡潔で読みやすい文章を心がけてください。";
 
-      // Reconstruct history for Gemini API
-      // Add context as part of the first prompt internally or as system instruction if supported
       const prompt = `${systemContext}\n\nユーザー: ${userMessage}`;
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
-      });
+      let responseText = '';
 
-      setMessages(prev => [...prev, { role: 'model', content: response.text || '申し訳ありません、回答を生成できませんでした。' }]);
+      if (aiConfig.provider === 'gemini') {
+        const ai = new GoogleGenAI({ apiKey: aiConfig.geminiApiKey });
+        const response = await ai.models.generateContent({
+          model: aiConfig.geminiModel || 'gemini-2.5-flash',
+          contents: prompt,
+        });
+        responseText = response.text || '申し訳ありません、回答を生成できませんでした。';
+      } else if (aiConfig.provider === 'ollama') {
+        const response = await fetch(`${aiConfig.ollamaEndpoint}/api/generate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: aiConfig.ollamaModel || 'llama3',
+            prompt: prompt,
+            stream: false,
+          }),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Ollamaサーバーに接続できませんでした。');
+        }
+        
+        const data = await response.json();
+        responseText = data.response;
+      }
+
+      setMessages(prev => [...prev, { role: 'model', content: responseText }]);
     } catch (error) {
       console.error(error);
-      setMessages(prev => [...prev, { role: 'model', content: 'エラーが発生しました。しばらく経ってから再度お試しください。' }]);
+      setMessages(prev => [...prev, { role: 'model', content: error instanceof Error ? error.message : 'エラーが発生しました。設定とネットワーク接続を確認してください。' }]);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col h-full bg-slate-50">
+    <div className="flex flex-col h-full bg-slate-50 relative">
       <div className="bg-purple-700 text-white p-4 shadow-md sticky top-0 z-10 flex items-center justify-between">
         <div>
           <h2 className="text-lg font-bold">AI練習プランナー</h2>
           <p className="text-purple-200 text-xs mt-0.5">{selectedDate.replace(/-/g, '/')} の記録を考慮</p>
         </div>
-        <Sparkles className="text-purple-300" size={24} />
+        <div className="flex items-center gap-2">
+          <button onClick={() => setIsSettingsOpen(true)} className="p-2 text-purple-200 hover:text-white hover:bg-purple-600 rounded-full transition-colors">
+            <SettingsIcon size={20} />
+          </button>
+          <Sparkles className="text-purple-300" size={24} />
+        </div>
       </div>
+
+      {isSettingsOpen && (
+        <div className="absolute inset-0 bg-black/50 z-20 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm max-h-[80vh] overflow-auto">
+            <div className="flex justify-between items-center p-4 border-b border-slate-100">
+              <h3 className="font-bold text-slate-800">AI設定</h3>
+              <button onClick={() => setIsSettingsOpen(false)} className="text-slate-400 hover:text-slate-600 p-1">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-4 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-1">AIプロバイダー</label>
+                <div className="flex gap-2">
+                  <label className="flex-1 flex items-center gap-2 border border-slate-200 p-2 rounded-lg cursor-pointer">
+                    <input 
+                      type="radio" 
+                      name="provider" 
+                      checked={tempConfig.provider === 'gemini'} 
+                      onChange={() => setTempConfig({...tempConfig, provider: 'gemini'})}
+                      className="text-purple-600 focus:ring-purple-500"
+                    />
+                    <span className="text-sm font-medium">Gemini API</span>
+                  </label>
+                  <label className="flex-1 flex items-center gap-2 border border-slate-200 p-2 rounded-lg cursor-pointer">
+                    <input 
+                      type="radio" 
+                      name="provider" 
+                      checked={tempConfig.provider === 'ollama'} 
+                      onChange={() => setTempConfig({...tempConfig, provider: 'ollama'})}
+                      className="text-purple-600 focus:ring-purple-500"
+                    />
+                    <span className="text-sm font-medium">Ollama (Local)</span>
+                  </label>
+                </div>
+              </div>
+
+              {tempConfig.provider === 'gemini' && (
+                <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1">APIキー</label>
+                    <input 
+                      type="password" 
+                      value={tempConfig.geminiApiKey} 
+                      onChange={e => setTempConfig({...tempConfig, geminiApiKey: e.target.value})}
+                      placeholder="AI Studio API Key"
+                      className="w-full bg-slate-50 border border-slate-200 p-2 rounded-lg text-sm"
+                    />
+                    <p className="text-xs text-slate-400 mt-1">キーはブラウザにのみ保存されます。</p>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1">モデル</label>
+                    <input 
+                      type="text" 
+                      value={tempConfig.geminiModel} 
+                      onChange={e => setTempConfig({...tempConfig, geminiModel: e.target.value})}
+                      placeholder="例: gemini-2.5-flash"
+                      className="w-full bg-slate-50 border border-slate-200 p-2 rounded-lg text-sm"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {tempConfig.provider === 'ollama' && (
+                <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1">エンドポイント</label>
+                    <input 
+                      type="text" 
+                      value={tempConfig.ollamaEndpoint} 
+                      onChange={e => setTempConfig({...tempConfig, ollamaEndpoint: e.target.value})}
+                      placeholder="例: http://localhost:11434"
+                      className="w-full bg-slate-50 border border-slate-200 p-2 rounded-lg text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1">モデル名</label>
+                    <input 
+                      type="text" 
+                      value={tempConfig.ollamaModel} 
+                      onChange={e => setTempConfig({...tempConfig, ollamaModel: e.target.value})}
+                      placeholder="例: llama3"
+                      className="w-full bg-slate-50 border border-slate-200 p-2 rounded-lg text-sm"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-2 rounded-b-xl">
+              <button 
+                onClick={() => setIsSettingsOpen(false)}
+                className="px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-200 rounded-lg transition-colors"
+              >
+                キャンセル
+              </button>
+              <button 
+                onClick={handleSaveSettings}
+                className="px-4 py-2 text-sm font-bold text-white bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors"
+              >
+                保存
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="flex-1 overflow-auto p-4 pb-20 space-y-4">
         {messages.map((msg, i) => (
@@ -135,3 +303,4 @@ export const AIPlannerView = () => {
     </div>
   );
 };
+
