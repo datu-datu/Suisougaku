@@ -27,6 +27,69 @@ interface Message {
   content: string;
 }
 
+type TemplateField = {
+  id: string;
+  label: string;
+  placeholder: string;
+};
+
+type PracticeTemplate = {
+  id: string;
+  label: string;
+  icon: React.ReactNode;
+  description: string;
+  fields: TemplateField[];
+  generatePrompt: (data: Record<string, string>) => string;
+};
+
+const PRACTICE_TEMPLATES: PracticeTemplate[] = [
+  {
+    id: 'concert_prep',
+    label: '練習計画作成',
+    icon: '📅',
+    description: 'コンクールや定期演奏会に向けた中長期の練習計画を立てます。',
+    fields: [
+      { id: 'purpose', label: '目的・本番名', placeholder: '例：夏のコンクール、定期演奏会' },
+      { id: 'duration', label: '本番までの期間', placeholder: '例：3ヶ月、半年' },
+      { id: 'focus', label: '重点的に強化したい点', placeholder: '例：ハーモニーの精度、表現力' },
+    ],
+    generatePrompt: (d) => `【長期練習計画の作成】\n目的: ${d.purpose || '未指定'}\n期間: ${d.duration || '未指定'}\n重点課題: ${d.focus || '未指定'}\n\n上記の設定で、時期ごとの目標や具体的な練習メニューを提案してください。`
+  },
+  {
+    id: 'sight_reading',
+    label: '初見練習',
+    icon: '👀',
+    description: '初見演奏の力を上げるための短い練習メニューを提案します。',
+    fields: [
+      { id: 'target', label: '対象レベル・パート', placeholder: '例：中学生全体、金管セクション' },
+      { id: 'time', label: '所要時間', placeholder: '例：5分、10分' },
+    ],
+    generatePrompt: (d) => `【初見練習メニューの作成】\n対象: ${d.target || '未指定'}\n時間: ${d.time || '未指定'}\n\n対象の初見演奏のレベルを効果的に上げるための、指定時間内でできる実践的な練習メニューを複数提案してください。`
+  },
+  {
+    id: 'exam',
+    label: '試験・オーディション',
+    icon: '📝',
+    description: '実技試験や部内オーディションに向けた個人練習のアドバイスをもらいます。',
+    fields: [
+      { id: 'instrument', label: '対象の楽器', placeholder: '例：クラリネット、トランペット' },
+      { id: 'concerns', label: '悩みや不安な点', placeholder: '例：高音の安定感、緊張しやすい' },
+    ],
+    generatePrompt: (d) => `【実技試験・オーディション対策】\n対象楽器: ${d.instrument || '未指定'}\n悩み・不安: ${d.concerns || '特になし'}\n\n試験に向けた個人練習の具体的なルーティンと、指定された悩みに対する解決策、本番の緊張に打ち勝つためのメンタルアドバイスをください。`
+  },
+  {
+    id: 'tuning',
+    label: '基礎・チューニング',
+    icon: '🎺',
+    description: 'バンド全体のピッチや音程感を向上させるための指導方法のアドバイスをもらいます。',
+    fields: [
+      { id: 'target', label: '対象編成', placeholder: '例：全体、木管セクション' },
+      { id: 'issue', label: '課題・悩み', placeholder: '例：ピッチが合わない、和音が濁る' },
+    ],
+    generatePrompt: (d) => `【基礎合奏・チューニングの改善】\n対象: ${d.target || '未指定'}\n具体的な課題: ${d.issue || '未指定'}\n\nピッチや音程感の課題を解決するための、基礎合奏やチューニング時の具体的な練習方法と指導のコツを教えてください。`
+  }
+];
+
 export const AIPlannerView = () => {
   const { selectedDate, logs, aiLogs, setAiLogs } = useAppState();
   const messages = aiLogs[selectedDate] || [
@@ -51,6 +114,8 @@ export const AIPlannerView = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const [tempConfig, setTempConfig] = useState<AIConfig>(aiConfig);
+  const [selectedTemplate, setSelectedTemplate] = useState<PracticeTemplate | null>(null);
+  const [templateFormData, setTemplateFormData] = useState<Record<string, string>>({});
 
   useEffect(() => {
     setTempConfig(aiConfig);
@@ -87,12 +152,32 @@ export const AIPlannerView = () => {
       // Build context from logs
       const currentLog = logs[selectedDate];
       let systemContext = `あなたはプロの吹奏楽指導者をサポートするAIアシスタントです。今後の練習計画の提案や、指導方法のアドバイスを行います。\n\n`;
-      if (currentLog && (currentLog.marks.length > 0 || currentLog.overallNotes)) {
-        systemContext += `【${selectedDate}の合奏記録データ】\n曲名: ${currentLog.pieceTitle || '不明'}\n`;
-        currentLog.marks.forEach(m => {
-          systemContext += `- 練習番号 ${m.markName}: 指導内容[${m.guidance}], 残りの課題[${m.remainingTasks}]\n`;
-        });
-        systemContext += `全体メモ: ${currentLog.overallNotes}\n\n`;
+      
+      const hasLegacyLog = currentLog && ((currentLog.marks && currentLog.marks.length > 0) || currentLog.pieceTitle);
+      const hasModernLog = currentLog && (currentLog.pieces && currentLog.pieces.length > 0);
+      
+      if (hasModernLog || hasLegacyLog || (currentLog && currentLog.overallNotes)) {
+        systemContext += `【${selectedDate}の合奏記録データ】\n`;
+        
+        if (hasModernLog) {
+          currentLog!.pieces!.forEach(p => {
+            systemContext += `曲名: ${p.pieceTitle || '不明'}\n`;
+            p.marks?.forEach(m => {
+              systemContext += `- 練習番号 ${m.markName}: 指導内容[${m.guidance}], 残りの課題[${m.remainingTasks}]\n`;
+            });
+          });
+        } else if (hasLegacyLog) {
+          systemContext += `曲名: ${currentLog!.pieceTitle || '不明'}\n`;
+          currentLog!.marks?.forEach(m => {
+            systemContext += `- 練習番号 ${m.markName}: 指導内容[${m.guidance}], 残りの課題[${m.remainingTasks}]\n`;
+          });
+        }
+        
+        if (currentLog?.overallNotes) {
+          systemContext += `全体メモ: ${currentLog.overallNotes}\n\n`;
+        } else {
+          systemContext += `\n`;
+        }
       } else {
         systemContext += `※${selectedDate}の合奏記録はまだ入力されていません。\n\n`;
       }
@@ -288,18 +373,66 @@ export const AIPlannerView = () => {
       </div>
 
       <div className="bg-white border-t border-slate-200 p-3 pb-safe shrink-0 w-full flex flex-col gap-2">
+        {selectedTemplate && (
+          <div className="absolute inset-0 bg-black/50 z-20 flex items-end justify-center sm:items-center sm:p-4">
+            <div className="bg-white w-full rounded-t-2xl sm:rounded-2xl shadow-xl max-w-sm max-h-[85vh] flex flex-col animate-in slide-in-from-bottom-4 sm:slide-in-from-bottom-8">
+              <div className="flex justify-between items-center p-4 border-b border-slate-100 shrink-0">
+                <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                  <span>{selectedTemplate.icon}</span> {selectedTemplate.label}
+                </h3>
+                <button onClick={() => setSelectedTemplate(null)} className="text-slate-400 hover:text-slate-600 p-1">
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="p-4 overflow-y-auto space-y-4">
+                <p className="text-sm text-slate-500">{selectedTemplate.description}</p>
+                
+                {selectedTemplate.fields.map(field => (
+                  <div key={field.id}>
+                    <label className="block text-xs font-bold text-slate-600 mb-1">{field.label}</label>
+                    <input 
+                      type="text" 
+                      placeholder={field.placeholder}
+                      value={templateFormData[field.id] || ''}
+                      onChange={e => setTemplateFormData({...templateFormData, [field.id]: e.target.value})}
+                      className="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-lg text-sm focus:border-purple-400 focus:ring-1 focus:ring-purple-400 outline-none transition"
+                    />
+                  </div>
+                ))}
+              </div>
+              <div className="p-4 border-t border-slate-100 bg-slate-50 flex gap-2 shrink-0 sm:rounded-b-2xl">
+                <button 
+                  onClick={() => setSelectedTemplate(null)}
+                  className="flex-1 py-3 text-sm font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition-colors"
+                >
+                  キャンセル
+                </button>
+                <button 
+                  onClick={() => {
+                    const prompt = selectedTemplate.generatePrompt(templateFormData);
+                    setSelectedTemplate(null);
+                    setTemplateFormData({});
+                    setInput(prompt);
+                  }}
+                  className="flex-1 py-3 text-sm font-bold text-white bg-purple-600 hover:bg-purple-700 rounded-xl transition-colors shadow-md flex items-center justify-center gap-2"
+                >
+                  <Sparkles size={16} /> AIに相談
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1">
-          {[
-            { id: 'templates', label: '📖 練習テンプレ作成', prompt: 'コンクール・本番に向けた長期的な練習計画を立ててください。時期ごとの目標や具体的な練習メニューを提案してください。' },
-            { id: 'sight_reading', label: '👀 初見練習メニュー', prompt: '生徒の初見演奏の力を上げるための5分〜10分でできる練習メニューを複数提案してください。' },
-            { id: 'exam', label: '📝 試験対策', prompt: '実技試験（または部内オーディション）に向けた個人練習のルーティンと、緊張に打ち勝つためのメンタルアドバイスをください。' },
-            { id: 'tuning', label: '🎺 チューニング改善', prompt: 'バンド全体のピッチ・音程感が合わない悩みを解決するための、基礎合奏やチューニング時の具体的な指導方法を教えてください。' },
-          ].map(tpl => (
+          {PRACTICE_TEMPLATES.map(tpl => (
             <button
               key={tpl.id}
-              onClick={() => setInput(tpl.prompt)}
-              className="whitespace-nowrap px-3 py-1.5 bg-purple-50 text-purple-700 text-xs font-bold rounded-lg border border-purple-200 hover:bg-purple-100 transition-colors"
+              onClick={() => {
+                setTemplateFormData({});
+                setSelectedTemplate(tpl);
+              }}
+              className="whitespace-nowrap px-3 py-1.5 bg-purple-50 text-purple-700 text-xs font-bold rounded-lg border border-purple-200 hover:bg-purple-100 transition-colors flex items-center gap-1.5"
             >
+              <span>{tpl.icon}</span>
               {tpl.label}
             </button>
           ))}
@@ -315,8 +448,8 @@ export const AIPlannerView = () => {
               }
             }}
             placeholder="次の練習で重点的にやるべきことは？"
-            className="flex-1 bg-transparent border-none p-2 pl-4 text-sm outline-none resize-none max-h-32 min-h-[40px]"
-            rows={1}
+            className="flex-1 bg-transparent border-none p-2 pl-4 text-sm outline-none resize-none max-h-32 min-h-[60px]"
+            rows={2}
           />
           <button 
             onClick={handleSend}

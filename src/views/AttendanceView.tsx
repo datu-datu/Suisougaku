@@ -225,26 +225,48 @@ export const AttendanceView = () => {
                     </div>
                     <div className={`flex rounded-xl p-1 gap-1.5 ${isOnLeave ? 'bg-transparent' : 'bg-slate-100'} flex-1`}>
                       {!isOnLeave ? (
-                        <>
-                          <button
-                            onClick={() => updateStatus(member.id, 'present')}
-                            className={`flex-1 py-3 rounded-lg text-xs sm:text-sm font-bold transition-all active:scale-95 ${status === 'present' ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-400 bg-white shadow-sm ring-1 ring-slate-200'}`}
-                          >
-                            出席
-                          </button>
-                          <button
-                            onClick={() => updateStatus(member.id, 'late')}
-                            className={`flex-1 py-3 rounded-lg text-xs sm:text-sm font-bold transition-all active:scale-95 ${status === 'late' ? 'bg-amber-500 text-white shadow-md' : 'text-slate-400 bg-white shadow-sm ring-1 ring-slate-200'}`}
-                          >
-                            遅刻
-                          </button>
-                          <button
-                            onClick={() => updateStatus(member.id, 'absent')}
-                            className={`flex-1 py-3 rounded-lg text-xs sm:text-sm font-bold transition-all active:scale-95 ${status === 'absent' ? 'bg-red-500 text-white shadow-md' : 'text-slate-400 bg-white shadow-sm ring-1 ring-slate-200'}`}
-                          >
-                            欠席
-                          </button>
-                        </>
+                        !status ? (
+                          <>
+                            <button
+                              onClick={() => updateStatus(member.id, 'present')}
+                              className="flex-1 py-3 rounded-lg text-xs sm:text-sm font-bold transition-all active:scale-95 text-slate-400 bg-white shadow-sm ring-1 ring-slate-200"
+                            >
+                              出席
+                            </button>
+                            <button
+                              onClick={() => updateStatus(member.id, 'late')}
+                              className="flex-1 py-3 rounded-lg text-xs sm:text-sm font-bold transition-all active:scale-95 text-slate-400 bg-white shadow-sm ring-1 ring-slate-200"
+                            >
+                              遅刻
+                            </button>
+                            <button
+                              onClick={() => updateStatus(member.id, 'absent')}
+                              className="flex-1 py-3 rounded-lg text-xs sm:text-sm font-bold transition-all active:scale-95 text-slate-400 bg-white shadow-sm ring-1 ring-slate-200"
+                            >
+                              欠席
+                            </button>
+                          </>
+                        ) : (
+                          <div className="relative flex-1">
+                            <select
+                              value={status}
+                              onChange={(e) => updateStatus(member.id, e.target.value as any)}
+                              className={`w-full appearance-none py-3 pl-4 pr-10 rounded-lg text-sm font-bold outline-none transition-all shadow-md cursor-pointer flex-1
+                                ${status === 'present' ? 'bg-emerald-500 text-white' : 
+                                  status === 'late' ? 'bg-amber-500 text-white' : 
+                                  'bg-red-500 text-white'}
+                              `}
+                              style={{ textAlignLast: 'center' }}
+                            >
+                              <option value="present">出席</option>
+                              <option value="late">遅刻</option>
+                              <option value="absent">欠席</option>
+                            </select>
+                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-white opacity-80">
+                              <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                            </div>
+                          </div>
+                        )
                       ) : (
                         <div className="w-full text-center px-4 py-3 text-xs font-bold text-slate-400">
                           休部期間中
