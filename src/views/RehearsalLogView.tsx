@@ -282,7 +282,7 @@ export const RehearsalLogView = () => {
         </button>
       </div>
 
-      <div className="flex-1 overflow-auto p-4 pb-24">
+      <div className="flex-1 overflow-auto p-4 pb-6">
         {pieces.length === 0 && (
           <div className="text-center py-10 text-slate-500 bg-white rounded-xl shadow-sm border border-slate-100">
             <Music size={40} className="mx-auto text-blue-200 mb-3" />

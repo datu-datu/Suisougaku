@@ -257,7 +257,7 @@ export const AIPlannerView = () => {
         </div>
       )}
 
-      <div className="flex-1 overflow-auto p-4 pb-20 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div className={`flex gap-2 max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
@@ -287,7 +287,23 @@ export const AIPlannerView = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="bg-white border-t border-slate-200 p-3 pb-safe absolute bottom-16 left-0 right-0 z-10 w-full">
+      <div className="bg-white border-t border-slate-200 p-3 pb-safe shrink-0 w-full flex flex-col gap-2">
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1">
+          {[
+            { id: 'templates', label: '📖 練習テンプレ作成', prompt: 'コンクール・本番に向けた長期的な練習計画を立ててください。時期ごとの目標や具体的な練習メニューを提案してください。' },
+            { id: 'sight_reading', label: '👀 初見練習メニュー', prompt: '生徒の初見演奏の力を上げるための5分〜10分でできる練習メニューを複数提案してください。' },
+            { id: 'exam', label: '📝 試験対策', prompt: '実技試験（または部内オーディション）に向けた個人練習のルーティンと、緊張に打ち勝つためのメンタルアドバイスをください。' },
+            { id: 'tuning', label: '🎺 チューニング改善', prompt: 'バンド全体のピッチ・音程感が合わない悩みを解決するための、基礎合奏やチューニング時の具体的な指導方法を教えてください。' },
+          ].map(tpl => (
+            <button
+              key={tpl.id}
+              onClick={() => setInput(tpl.prompt)}
+              className="whitespace-nowrap px-3 py-1.5 bg-purple-50 text-purple-700 text-xs font-bold rounded-lg border border-purple-200 hover:bg-purple-100 transition-colors"
+            >
+              {tpl.label}
+            </button>
+          ))}
+        </div>
         <div className="flex items-end gap-2 bg-slate-100 p-1.5 rounded-3xl border border-slate-200 focus-within:border-purple-400 focus-within:ring-2 focus-within:ring-purple-100 transition">
           <textarea
             value={input}

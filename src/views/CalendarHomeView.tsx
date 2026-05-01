@@ -30,7 +30,7 @@ export const CalendarHomeView = ({ onNavigate }: { onNavigate: (tab: string) => 
   };
 
   return (
-    <div className="flex flex-col min-h-full h-fit bg-slate-50 p-4 overflow-y-auto pb-24">
+    <div className="flex flex-col h-full bg-slate-50 p-4 overflow-y-auto">
       <div className="bg-white rounded-xl shadow-sm p-4 mb-6 shrink-0">
         <div className="flex justify-between items-center mb-4">
           <button onClick={prevMonth} className="p-2 hover:bg-slate-100 rounded-full">

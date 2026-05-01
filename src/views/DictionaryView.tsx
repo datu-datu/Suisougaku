@@ -119,7 +119,7 @@ export const DictionaryView = () => {
           ))}
         </div>
 
-        <div className="p-4 pt-0 space-y-3 pb-24">
+        <div className="p-4 pt-0 space-y-3 pb-6">
           <div className="flex justify-end mb-2">
             <button onClick={() => openModal()} className="flex items-center gap-1 text-sm bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-full font-bold hover:bg-indigo-200">
               <Plus size={16} /> 用語を追加

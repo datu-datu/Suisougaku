@@ -175,10 +175,30 @@ export const AttendanceView = () => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto p-4 pb-24">
+      <div className="flex-1 overflow-auto p-4 pb-6">
         {Object.keys(rosterByPart).length === 0 && (
-          <div className="text-center py-10 text-slate-500">
-            名簿データがありません。設定からインポートしてください。
+          <div className="text-center py-16 px-4 bg-white rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center">
+            <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mb-4 text-emerald-500">
+              <Upload size={32} />
+            </div>
+            <h3 className="text-lg font-bold text-slate-800 mb-2">名簿データがありません</h3>
+            <p className="text-sm text-slate-500 mb-6 max-w-[240px] leading-relaxed">
+              出席管理を始めるには、名簿データ (JSON形式) をアップロードしてください。
+            </p>
+            <button
+              onClick={() => rosterInputRef.current?.click()}
+              className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-full font-bold transition-colors shadow-md active:scale-95"
+            >
+              <FileJson size={20} />
+              ファイルを選択
+            </button>
+            <a 
+              href="data:text/json;charset=utf-8,%5B%0A%20%20%7B%0A%20%20%20%20%22id%22%3A%20%221%22%2C%0A%20%20%20%20%22name%22%3A%20%22%E5%B1%B1%E7%94%B0%E5%A4%AA%E9%83%8E%22%2C%0A%20%20%20%20%22part%22%3A%20%22%E3%83%88%E3%83%A9%E3%83%B3%E3%83%9A%E3%83%83%E3%83%88%22%0A%20%20%7D%0A%5D"
+              download="sample_roster.json"
+              className="text-xs text-emerald-600 hover:text-emerald-700 mt-4 underline underline-offset-2"
+            >
+              サンプルフォーマットをダウンロード
+            </a>
           </div>
         )}
         {Object.keys(rosterByPart).sort((a, b) => {
@@ -199,8 +219,11 @@ export const AttendanceView = () => {
                 const status = isOnLeave ? 'on_leave' : getStatus(member.id);
                 return (
                   <div key={member.id} className={`p-3 rounded-xl shadow-sm flex items-center justify-between ${isOnLeave ? 'bg-slate-100 opacity-70' : 'bg-white'}`}>
-                    <span className="font-medium text-slate-700 shrink-0">{member.name} {isOnLeave && <span className="ml-2 text-xs font-bold text-slate-500 bg-slate-200 px-1.5 py-0.5 rounded">休部</span>}</span>
-                    <div className={`flex rounded-xl p-1 gap-1.5 ${isOnLeave ? 'bg-transparent' : 'bg-slate-100 flex-1 ml-4'}`}>
+                    <div className="w-24 sm:w-32 shrink-0 pr-2 flex items-center flex-wrap gap-1">
+                      <span className="font-medium text-slate-700 leading-tight">{member.name}</span>
+                      {isOnLeave && <span className="text-[10px] font-bold text-slate-500 bg-slate-200 px-1.5 py-0.5 rounded mt-0.5">休部</span>}
+                    </div>
+                    <div className={`flex rounded-xl p-1 gap-1.5 ${isOnLeave ? 'bg-transparent' : 'bg-slate-100'} flex-1`}>
                       {!isOnLeave ? (
                         <>
                           <button

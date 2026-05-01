@@ -34,7 +34,7 @@ const todayStr = (() => {
 export const AppStateProvider = ({ children }: { children: ReactNode }) => {
   const [logs, setLogs] = useLocalStorage<Record<string, RehearsalLog>>('ensemble_logs', {});
   const [attendance, setAttendance] = useLocalStorage<Record<string, DailyAttendance>>('ensemble_attendance', {});
-  const [roster, setRoster] = useLocalStorage<Member[]>('ensemble_roster', defaultRoster);
+  const [roster, setRoster] = useLocalStorage<Member[]>('ensemble_roster', []);
   const [dictionary, setDictionary] = useLocalStorage<DictionaryTerm[]>('ensemble_dictionary', musicDictionary);
   const [pieces, setPieces] = useLocalStorage<Piece[]>('ensemble_pieces', []);
   const [aiLogs, setAiLogs] = useLocalStorage<Record<string, Message[]>>('ensemble_ai_logs', {});
