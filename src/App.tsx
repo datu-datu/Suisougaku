@@ -27,8 +27,8 @@ function AppContent() {
   };
 
   return (
-    <div className="flex flex-col h-[100dvh] w-full bg-slate-50 text-slate-900 font-sans mx-auto max-w-md overflow-hidden relative shadow-2xl">
-      <div className="flex-1 overflow-hidden">
+    <div className="flex flex-col h-full w-full bg-slate-50 text-slate-900 font-sans mx-auto max-w-md overflow-hidden relative sm:shadow-2xl">
+      <div className="flex-1 overflow-hidden relative">
         {renderView()}
       </div>
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
