@@ -4,10 +4,16 @@
   --font-sans: "Inter", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
 }
 
-body {
-  background-color: #f8fafc;
+html, body, #root {
+  height: 100%;
+  width: 100%;
   margin: 0;
   padding: 0;
+  overflow: hidden;
+}
+
+body {
+  background-color: #f8fafc;
   /* Prevent overscroll bounce on mobile to keep app-like feel */
   overscroll-behavior-y: none;
 }

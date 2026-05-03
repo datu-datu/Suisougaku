@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAppState } from '../store/AppStateContext';
-import { Plus, Trash2, Save, Download, Upload, Settings, X, FileJson, Music, Edit2 } from 'lucide-react';
+import { Plus, Trash2, Save, Download, Upload, Settings, X, FileJson, Music, Edit2, CheckCircle2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { PieceLog, PracticeMark, Piece } from '../types';
 
@@ -237,49 +237,52 @@ export const RehearsalLogView = () => {
   const activePiece = pieces[activePieceIndex];
 
   return (
-    <div className="flex flex-col h-full bg-slate-50 relative">
-      <div className="bg-blue-700 text-white p-4 shadow-md sticky top-0 z-10 flex justify-between items-center shrink-0">
+    <div className="flex flex-col h-full bg-slate-50 relative overflow-hidden">
+      <div className="bg-blue-700 text-white px-4 py-3 shadow-md sticky top-0 z-10 flex justify-between items-center shrink-0">
         <div>
-          <p className="text-blue-200 text-xs font-medium">合奏録</p>
-          <h2 className="text-lg font-bold">{format(new Date(selectedDate), 'yyyy年M月d日')}</h2>
+          <p className="text-blue-200 text-[10px] font-bold uppercase tracking-wider">Rehearsal Log</p>
+          <h2 className="text-lg font-bold leading-tight">{format(new Date(selectedDate), 'yyyy年M月d日')}</h2>
         </div>
         <div className="flex items-center gap-2">
-          {savedMessage && (
-            <span className="text-blue-200 text-xs font-bold animate-pulse mr-2">自動保存済</span>
-          )}
-          <button onClick={() => setIsMenuOpen(true)} className="p-2 hover:bg-blue-600 rounded-full transition-colors ml-1">
+          <div className={`flex items-center gap-1.5 bg-blue-800/50 px-2 py-1 rounded-full transition-opacity duration-500 ${savedMessage ? 'opacity-100' : 'opacity-0'}`}>
+            <CheckCircle2 size={12} className="text-blue-200" />
+            <span className="text-blue-100 text-[10px] font-bold">Saved</span>
+          </div>
+          <button onClick={() => setIsMenuOpen(true)} className="p-2 hover:bg-blue-600 rounded-full transition-colors">
             <Settings size={20} />
           </button>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex flex-wrap gap-2 p-4 pb-0 bg-slate-50 shrink-0">
-        {pieces.map((p, i) => {
-          const shortTitle = p.pieceTitle 
-            ? (p.pieceTitle.length > 6 ? p.pieceTitle.substring(0, 6) + '...' : p.pieceTitle) 
-            : `曲 ${i + 1}`;
-          const isActive = i === activePieceIndex;
-          return (
-            <button
-              key={p.id}
-              onClick={() => setActivePieceIndex(i)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-colors ${
-                isActive 
-                  ? 'bg-blue-600 text-white shadow-sm' 
-                  : 'bg-white text-blue-600 border border-blue-200 hover:bg-blue-50'
-              }`}
-            >
-              {shortTitle}
-            </button>
-          );
-        })}
-        <button 
-          onClick={handleAddPiece}
-          className="px-3 py-1.5 rounded-lg text-sm font-bold bg-white text-slate-500 border border-slate-200 hover:bg-slate-100 transition flex items-center"
-        >
-          <Plus size={16} /> 追加
-        </button>
+      {/* Tabs - Horizontal Scrollable */}
+      <div className="bg-white border-b border-slate-200 shrink-0">
+        <div className="flex items-center gap-2 p-3 overflow-x-auto hide-scrollbar">
+          {pieces.map((p, i) => {
+            const shortTitle = p.pieceTitle
+              ? (p.pieceTitle.length > 8 ? p.pieceTitle.substring(0, 8) + '...' : p.pieceTitle)
+              : `曲 ${i + 1}`;
+            const isActive = i === activePieceIndex;
+            return (
+              <button
+                key={p.id}
+                onClick={() => setActivePieceIndex(i)}
+                className={`px-4 py-2 rounded-full text-sm font-bold transition-all whitespace-nowrap border-2 ${
+                  isActive
+                    ? 'bg-blue-600 text-white border-blue-600 shadow-md transform scale-105'
+                    : 'bg-slate-50 text-slate-500 border-slate-100 hover:bg-slate-100'
+                }`}
+              >
+                {shortTitle}
+              </button>
+            );
+          })}
+          <button
+            onClick={handleAddPiece}
+            className="px-4 py-2 rounded-full text-sm font-bold bg-blue-50 text-blue-600 border-2 border-blue-100 border-dashed hover:bg-blue-100 transition flex items-center gap-1 whitespace-nowrap shrink-0"
+          >
+            <Plus size={16} /> 追加
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-auto p-4 pb-6">
@@ -297,109 +300,130 @@ export const RehearsalLogView = () => {
         )}
 
         {activePiece && (
-          <div className="bg-white rounded-xl shadow-sm p-4 mb-6 border border-slate-100">
-            <div className="flex justify-between items-start mb-4 pb-3 border-b border-slate-100">
-              <div className="flex-1 mr-2 w-full">
-                <label className="block text-sm font-bold text-slate-700 mb-1">練習曲名</label>
-                {/* Fallback to custom input if they type something not in the list, but primarily use a datalist or custom combobox. Let's use a standard select combined with an option for manual. Since native select is rigid, we map masterPieces. */}
-                <select
-                  value={masterPieces.some(mp => mp.title === activePiece.pieceTitle) ? activePiece.pieceTitle : (activePiece.pieceTitle ? 'custom' : '')}
-                  onChange={(e) => {
-                    if (e.target.value === 'custom') {
-                      // Keep existing or empty
-                    } else if (e.target.value === '') {
-                      updatePieceTitle(activePiece.id, '');
-                    } else {
-                      updatePieceTitle(activePiece.id, e.target.value);
-                    }
-                  }}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 font-bold text-blue-900 outline-none focus:border-blue-500 transition mb-2"
-                >
-                  <option value="">-- 曲を選択 --</option>
-                  {masterPieces.map(mp => (
-                    <option key={mp.id} value={mp.title}>{mp.title}</option>
-                  ))}
-                  <option value="custom">その他 (直接入力)</option>
-                </select>
+          <div className="bg-white rounded-2xl shadow-md p-5 mb-6 border border-slate-100 animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div className="flex justify-between items-start mb-6 gap-4">
+              <div className="flex-1 min-w-0">
+                <label className="block text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1 ml-1">Practice Piece</label>
+                <div className="space-y-2">
+                  <select
+                    value={masterPieces.some(mp => mp.title === activePiece.pieceTitle) ? activePiece.pieceTitle : (activePiece.pieceTitle ? 'custom' : '')}
+                    onChange={(e) => {
+                      if (e.target.value === 'custom') {
+                        // Keep current or empty
+                      } else if (e.target.value === '') {
+                        updatePieceTitle(activePiece.id, '');
+                      } else {
+                        updatePieceTitle(activePiece.id, e.target.value);
+                      }
+                    }}
+                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl p-3 font-bold text-slate-800 outline-none focus:border-blue-500 focus:bg-white transition appearance-none cursor-pointer"
+                  >
+                    <option value="">-- 曲を選択 --</option>
+                    {masterPieces.map(mp => (
+                      <option key={mp.id} value={mp.title}>{mp.title}</option>
+                    ))}
+                    <option value="custom">その他 (直接入力)</option>
+                  </select>
 
-                {(!masterPieces.some(mp => mp.title === activePiece.pieceTitle) && activePiece.pieceTitle !== '') || masterPieces.length === 0 ? (
-                  <input 
-                    type="text" 
-                    value={activePiece.pieceTitle}
-                    onChange={e => updatePieceTitle(activePiece.id, e.target.value)}
-                    placeholder="曲名を直接入力..."
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 font-bold text-blue-900 outline-none focus:border-blue-500 transition"
-                  />
-                ) : null}
+                  {(!masterPieces.some(mp => mp.title === activePiece.pieceTitle) && activePiece.pieceTitle !== '') || masterPieces.length === 0 ? (
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={activePiece.pieceTitle}
+                        onChange={e => updatePieceTitle(activePiece.id, e.target.value)}
+                        placeholder="曲名を直接入力..."
+                        className="w-full bg-blue-50/50 border-2 border-blue-100 rounded-xl p-3 font-bold text-blue-900 outline-none focus:border-blue-500 focus:bg-white transition"
+                      />
+                      <Edit2 size={16} className="absolute right-3 top-3.5 text-blue-300" />
+                    </div>
+                  ) : null}
+                </div>
               </div>
               <button 
                 onClick={() => removePiece(activePiece.id)}
-                className="mt-6 p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors shrink-0"
+                className="mt-6 p-2.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all shrink-0 border border-transparent hover:border-red-100"
                 title="この曲の記録を削除"
               >
-                <Trash2 size={20} />
+                <Trash2 size={22} />
               </button>
             </div>
 
-            <div className="mb-2">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="font-bold text-slate-800 text-sm">練習番号ごとの記録</h3>
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-6 bg-blue-600 rounded-full"></div>
+                  <h3 className="font-black text-slate-800 text-sm tracking-tight">練習番号ごとの記録</h3>
+                </div>
                 <button 
                   onClick={() => handleAddMark(activePiece.id)}
-                  className="text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-1 transition"
+                  className="text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-full text-xs font-black flex items-center gap-1.5 transition shadow-lg shadow-blue-200 active:scale-95"
                 >
-                  <Plus size={16} /> 番号追加
+                  <Plus size={14} strokeWidth={3} /> 追加
                 </button>
               </div>
 
               {activePiece.marks.length === 0 && (
-                <div className="text-center py-6 text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-300">
-                  練習番号を追加して記録しましょう
+                <div
+                  onClick={() => handleAddMark(activePiece.id)}
+                  className="text-center py-12 text-slate-400 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 cursor-pointer hover:bg-slate-100 hover:border-slate-300 transition-all group"
+                >
+                  <div className="bg-white w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm group-hover:scale-110 transition-transform">
+                    <Plus size={24} className="text-slate-300" />
+                  </div>
+                  <p className="text-xs font-bold">練習番号を追加して記録しましょう</p>
                 </div>
               )}
 
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {activePiece.marks.map((mark) => (
-                  <div key={mark.id} className="bg-slate-50 rounded-xl p-3 border-l-4 border-l-blue-500 relative">
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="flex-1 max-w-[50%] xs:max-w-[200px]">
-                        <label className="block text-xs font-bold text-slate-500 mb-1">練習番号 / 小節</label>
+                  <div key={mark.id} className="bg-slate-50/80 rounded-2xl p-4 border border-slate-100 relative group transition-all hover:bg-white hover:shadow-md hover:border-blue-100">
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="flex-1 max-w-[140px]">
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Mark / Bar</label>
                         <input 
                           type="text" 
                           value={mark.markName}
                           onChange={e => updateMark(activePiece.id, mark.id, 'markName', e.target.value)}
                           placeholder="例: A, [15]~"
-                          className="w-full bg-white border border-slate-200 rounded-md p-2 font-bold text-sm outline-none focus:border-blue-500 transition"
+                          className="w-full bg-white border-2 border-slate-100 rounded-lg p-2 font-black text-sm outline-none focus:border-blue-500 transition shadow-sm"
                         />
                       </div>
                       <button 
                         onClick={() => removeMark(activePiece.id, mark.id)}
-                        className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-100 rounded-md transition mt-4"
+                        className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                       >
                         <X size={18} />
                       </button>
                     </div>
                     
-                    <div className="mb-3">
-                      <label className="block text-xs font-bold text-slate-500 mb-1">指導したこと</label>
-                      <textarea 
-                        value={mark.guidance}
-                        onChange={e => updateMark(activePiece.id, mark.id, 'guidance', e.target.value)}
-                        placeholder="ピッチを合わせる、クレッシェンドの方向性..."
-                        rows={4}
-                        className="w-full bg-white border border-slate-200 rounded-md p-2 text-sm outline-none focus:border-blue-500 resize-none transition whitespace-pre-wrap"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 mb-1">残っている課題</label>
-                      <textarea 
-                        value={mark.remainingTasks}
-                        onChange={e => updateMark(activePiece.id, mark.id, 'remainingTasks', e.target.value)}
-                        placeholder="木管の連符がまだ合っていない、金管のスタミナ持続"
-                        rows={4}
-                        className="w-full bg-white border border-slate-200 rounded-md p-2 text-sm outline-none focus:border-blue-500 resize-none transition whitespace-pre-wrap"
-                      />
+                    <div className="space-y-4">
+                      <div>
+                        <label className="flex items-center gap-1.5 text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">
+                          <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                          指導内容
+                        </label>
+                        <textarea
+                          value={mark.guidance}
+                          onChange={e => updateMark(activePiece.id, mark.id, 'guidance', e.target.value)}
+                          placeholder="ピッチを合わせる、クレッシェンドの方向性..."
+                          rows={3}
+                          className="w-full bg-white border-2 border-slate-100 rounded-xl p-3 text-sm outline-none focus:border-blue-500 resize-none transition shadow-sm placeholder:text-slate-300"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="flex items-center gap-1.5 text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">
+                          <span className="w-1.5 h-1.5 bg-amber-500 rounded-full"></span>
+                          今後の課題
+                        </label>
+                        <textarea
+                          value={mark.remainingTasks}
+                          onChange={e => updateMark(activePiece.id, mark.id, 'remainingTasks', e.target.value)}
+                          placeholder="木管の連符がまだ合っていない、金管のスタミナ持続"
+                          rows={3}
+                          className="w-full bg-white border-2 border-slate-100 rounded-xl p-3 text-sm outline-none focus:border-blue-500 resize-none transition shadow-sm placeholder:text-slate-300"
+                        />
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -408,14 +432,17 @@ export const RehearsalLogView = () => {
           </div>
         )}
 
-        <div className="bg-white rounded-xl shadow-sm p-4 mb-8">
-          <label className="block text-sm font-bold text-slate-700 mb-2">全体を通した特記事項・所感</label>
+        <div className="bg-white rounded-2xl shadow-md p-5 mb-10 border border-slate-100">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-1.5 h-6 bg-indigo-600 rounded-full"></div>
+            <label className="block text-sm font-black text-slate-800 tracking-tight">全体を通した特記事項・所感</label>
+          </div>
           <textarea 
             value={notes}
             onChange={e => setNotes(e.target.value)}
             placeholder="本番に向けて全体のテンポ感は掴めてきたが、細かいアーティキュレーションがまだ甘い。"
             rows={5}
-            className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition resize-none whitespace-pre-wrap"
+            className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm outline-none focus:border-indigo-500 focus:bg-white transition resize-none whitespace-pre-wrap shadow-inner"
           />
         </div>
       </div>
